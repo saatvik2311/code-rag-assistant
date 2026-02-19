@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeRAG — AI Coding Assistant</title>
+    <meta name="description"
+        content="Multi-language AI coding assistant with RAG, repository analysis, code editing, and context memory">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="app">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">⚡</div>
+                    <div class="logo-text">
+                        <h1>CodeRAG</h1>
+                        <span class="subtitle">AI Coding Assistant</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-status" id="status-panel">
+                <div class="status-item">
+                    <span class="status-dot" id="ollama-dot"></span>
+                    <span>Ollama</span>
+                    <span class="status-value" id="ollama-status">Checking...</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-dot" id="index-dot"></span>
+                    <span>Knowledge Base</span>
+                    <span class="status-value" id="index-status">—</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-dot neutral"></span>
+                    <span>Model</span>
+                    <span class="status-value" id="model-name">—</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-dot neutral"></span>
+                    <span>Models</span>
+                    <span class="status-value" id="models-count">—</span>
+                </div>
+            </div>
+
+            <div class="sidebar-actions">
+                <button class="action-btn index-btn" id="index-btn" onclick="indexDocs()">
+                    <span class="btn-icon">📚</span>
+                    <span class="btn-text">Index Docs</span>
+                </button>
+                <button class="action-btn scan-btn" onclick="showScanModal()">
+                    <span class="btn-icon">🔍</span>
+                    <span class="btn-text">Scan Repo</span>
+                </button>
+                <button class="action-btn edit-btn" onclick="showEditModal()">
+                    <span class="btn-icon">✏️</span>
+                    <span class="btn-text">Edit Code</span>
+                </button>
+            </div>
+
+            <!-- Session Management -->
+            <div class="sidebar-sessions">
+                <div class="sessions-header">
+                    <h3>Sessions</h3>
+                    <button class="session-new-btn" onclick="createSession()" title="New Session">+</button>
+                </div>
+                <div class="sessions-list" id="sessions-list">
+                    <div class="session-empty">No sessions yet</div>
+                </div>
+            </div>
+
+            <!-- File Context Panel -->
+            <div class="sidebar-context">
+                <div class="context-header">
+                    <h3>File Context</h3>
+                </div>
+                <div class="context-input-row">
+                    <input type="text" id="context-path" placeholder="/path/to/project" class="context-path-input">
+                    <button class="context-browse-btn" onclick="browseFiles()" title="Browse">📂</button>
+                </div>
+                <div class="file-tree" id="file-tree"></div>
+                <div class="context-selected" id="context-selected"></div>
+            </div>
+
+            <div class="sidebar-topics">
+                <h3>Quick Topics</h3>
+                <div class="topic-chips">
+                    <button class="chip"
+                        onclick="askQuick('How does HashMap handle collisions in Java?')">HashMap</button>
+                    <button class="chip" onclick="askQuick('Write a Python sliding window function')">Sliding
+                        Window</button>
+                    <button class="chip" onclick="askQuick('Explain Go goroutines and channels')">Go Channels</button>
+                    <button class="chip" onclick="askQuick('Implement BFS and DFS in JavaScript')">Graph
+                        BFS/DFS</button>
+                    <button class="chip" onclick="askQuick('Explain async/await in TypeScript')">Async/Await</button>
+                    <button class="chip" onclick="askQuick('How to implement a binary search in Rust?')">Binary
+                        Search</button>
+                    <button class="chip"
+                        onclick="askQuick('Compare list comprehensions in Python vs Java Streams')">Comprehensions</button>
+                    <button class="chip" onclick="askQuick('Implement a LRU cache')">LRU Cache</button>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <span>100% Offline • Multi-Language • RLM-Powered</span>
+            </div>
+        </aside>
+
+        <!-- Main Chat -->
+        <main class="chat-area">
+            <div class="chat-header">
+                <h2>Ask anything about code</h2>
+                <p>Multi-language • Repository-aware • AI-powered editing</p>
+            </div>
+
+            <div class="messages" id="messages">
+                <div class="welcome-msg">
+                    <div class="welcome-icon">🚀</div>
+                    <h2>Ready to Code</h2>
+                    <p>Ask any coding question in any language — I'll find the most relevant documentation, analyze your
+                        repos, and give precise answers with working code.</p>
+                    <div class="welcome-features">
+                        <div class="feature-badge">🌐 Multi-Language</div>
+                        <div class="feature-badge">📂 Repo Analysis</div>
+                        <div class="feature-badge">✏️ Code Editing</div>
+                        <div class="feature-badge">🧠 Context Memory</div>
+                        <div class="feature-badge">🎯 RLM Retrieval</div>
+                    </div>
+                    <div class="welcome-examples">
+                        <button onclick="askQuick('Write a Python HashMap frequency counter for a string')">
+                            <span>🐍</span> Python frequency counter
+                        </button>
+                        <button onclick="askQuick('Implement Dijkstra\'s algorithm in Go')">
+                            <span>🗺️</span> Dijkstra's in Go
+                        </button>
+                        <button onclick="askQuick('How to implement a monotonic stack in JavaScript?')">
+                            <span>📚</span> JS monotonic stack
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <div class="input-wrapper">
+                    <textarea id="question-input" placeholder="Ask a coding question in any language..." rows="1"
+                        onkeydown="handleKeyDown(event)" oninput="autoResize(this)"></textarea>
+                    <button class="send-btn" id="send-btn" onclick="askQuestion()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </div>
+                <div class="input-hint">
+                    <span>Press <kbd>Enter</kbd> to send • <kbd>Shift+Enter</kbd> for new line</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scan Repo Modal -->
+    <div class="modal-overlay" id="scan-modal" onclick="closeScanModal(event)">
+        <div class="modal">
+            <h3>🔍 Scan Repository</h3>
+            <p>Enter the path to a local repository to analyze and index its code.</p>
+            <input type="text" id="scan-path" placeholder="/path/to/your/repo" class="modal-input">
+            <div class="modal-actions">
+                <button class="modal-btn cancel" onclick="closeScanModal()">Cancel</button>
+                <button class="modal-btn primary" onclick="scanRepo()" id="scan-submit-btn">Scan</button>
+            </div>
+            <div class="modal-status" id="scan-status"></div>
+        </div>
+    </div>
+
+    <!-- Edit Code Modal -->
+    <div class="modal-overlay" id="edit-modal" onclick="closeEditModal(event)">
+        <div class="modal modal-wide">
+            <h3>✏️ AI Code Editor</h3>
+            <p>Specify a file and an instruction for the AI to edit.</p>
+            <input type="text" id="edit-file" placeholder="/path/to/file.py" class="modal-input">
+            <textarea id="edit-instruction" placeholder="Describe what to change..." class="modal-textarea"
+                rows="3"></textarea>
+            <div class="modal-actions">
+                <button class="modal-btn cancel" onclick="closeEditModal()">Cancel</button>
+                <button class="modal-btn primary" onclick="editFile()" id="edit-submit-btn">Generate Edit</button>
+            </div>
+            <div class="modal-status" id="edit-status"></div>
+            <div class="diff-preview" id="diff-preview"></div>
+            <div class="modal-actions" id="apply-actions" style="display:none;">
+                <button class="modal-btn cancel" onclick="closeEditModal()">Discard</button>
+                <button class="modal-btn primary" onclick="applyEdit()">✅ Apply Edit</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/java.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/typescript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>

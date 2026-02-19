@@ -1,0 +1,11 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# System
+.DS_Store
+.env
+
+# RAG Data
+vector_store.json

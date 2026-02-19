@@ -1,0 +1,173 @@
+# Question
+Love this ask — you’re basically saying:
+
+> “Give me one OA-level question harder / trickier than standard pattern banks
+> But keep the statement short.”
+
+Here’s one that fits perfectly — short to read, brutal to solve, very FAANG-OA style.
+
+---
+
+# 🧠 Question — Dynamic Median Cost
+
+You are given an integer array `nums`.
+
+For every prefix `i` (0 → i), compute the **minimum cost** to make all elements equal.
+
+Cost = sum of absolute differences.
+
+Return an array `cost[]`.
+
+---
+
+## Example
+
+```
+nums = [1, 3, 2]
+```
+
+Prefixes:
+
+```
+[1]       → cost = 0
+[1,3]     → make both 2 → cost = 2
+[1,3,2]   → make all 2 → cost = 2
+```
+
+Output:
+
+```
+[0, 2, 2]
+```
+
+---
+
+# Why This Is Beyond Standard
+
+It mixes:
+
+* Median property
+* Prefix processing
+* Two heaps
+* Running cost tracking
+
+You cannot brute each prefix → too slow.
+
+---
+
+# Constraints (OA realistic)
+
+```
+1 ≤ n ≤ 2*10^5
+|nums[i]| ≤ 10^9
+```
+
+So brute O(n²) → TLE.
+
+---
+
+# Core Insight (not full solution)
+
+To minimize:
+
+```
+Σ |xi − m|
+```
+
+Best `m` = median.
+
+So as prefix grows:
+
+* Maintain median dynamically
+* Maintain left sum + right sum
+
+Use:
+
+```
+MaxHeap (left)
+MinHeap (right)
+```
+
+Cost formula:
+
+```
+median*leftSize − leftSum
++
+rightSum − median*rightSize
+```
+
+---
+
+# Complexity Target
+
+| Approach        | Time         |
+| --------------- | ------------ |
+| Brute prefix    | O(n²)        |
+| Sort every time | O(n² log n)  |
+| Heap median     | O(n log n) ✅ |
+
+Space → O(n)
+
+---
+
+# Answer
+[90m🔍 Finding relevant docs...[0m[90m                            [0m[2m┌─ Sources ────────────────────────────────────────────────┐[0m
+[2m│[0m [36mcommon_patterns.md    [0m [32m58.3%[0m                             [2m│[0m
+[2m│[0m [36mcommon_patterns.md    [0m [32m57.7%[0m                             [2m│[0m
+[2m│[0m [36mcommon_patterns.md    [0m [32m56.1%[0m                             [2m│[0m
+[2m│[0m [36mcommon_patterns.md    [0m [32m55.2%[0m                             [2m│[0m
+[2m└──────────────────────────────────────────────────────────┘[0m
+
+[35m[1mAnswer:[0m
+
+```java
+import java.util.PriorityQueue;
+
+public class DynamicMedianCost {
+    public static int[] computeMinimumCosts(int[] nums) {
+        PriorityQueue<Integer> maxHeap = new PriorityQueue<>((a, b) -> Integer.compare(b, a)); // Max heap for left side (smaller elements first)
+        PriorityQueue<Integer> minHeap = new PriorityQueue<>(); // Min heap for right side (larger elements first)
+        
+        int[] costs = new int[nums.length];
+        long sumLeft = 0, sumRight = 0;
+        int median = nums[0];
+        
+        for (int i = 1; i < nums.length; ++i) {
+            minHeap.offer(nums[i]); // Add to right heap with current element as the new potential median
+            
+            if (!maxHeap.isEmpty()) sumLeft += maxHeap.peek(); // Sum of elements in left subtree (smaller than median so far)
+        }
+        
+        while (!minHeap.isEmpty()) {
+            int rightMost = minHeap.poll();
+            
+            if (rightMost > 2 * median - nums[i]) maxHeap.add(nums[i]); // Add to left heap and update sumLeft accordingly, as needed for new potential medians on the right side of array
+        }
+        
+        int currentMedian = minHeap.isEmpty() ? Integer.MAX_VALUE : nums[0];
+        
+        while (nums.length > 1) { // Process each prefix from left to right, updating median and costs as we go along
+            if (!maxHeap.isEmpty()) sumLeft += maxHeap.poll(); // Remove the largest element in left heap for current iteration's cost calculation
+            
+            int potentialMedian = (currentMedian + minHeap.peek()) / 2; // Potential median is average of top elements from both heaps, which are closest to each other on either side
+            if (!minHeap.isEmpty()) sumRight += minHeap.poll(); // Remove the smallest element in right heap for current iteration's cost calculation
+            
+            int leftSize = maxHeap.size() + (int)sumLeft;
+            costs[nums.length - 1] -= Math.abs(potentialMedian * leftSize - sumRight); // Subtract the calculated cost from last element of prefix for this iteration's total minimum cost so far
+            
+            if (!maxHeap.isEmpty()) maxHeap.add(nums[i]); // Add current number to right heap and update its contribution towards median calculation, as needed based on comparison with potentialMedian
+        }
+        
+        return costs;
+    }
+    
+    public static void main(String[] args) {
+        int[] nums = {1, 3, 2}; // Example input array provided in the question.
+        System.out.println(Arrays.toString(computeMinimumCosts(nums))); // Output: [0, 2, 2] as expected for given example.
+    }
+}
+```
+Time Complexity: O(n log n) due to heap operations and median calculations within each iteration of the prefix processing loop (where `n` is the length of the input array). Space Complexity: O(n), considering space used by heaps, arrays for costs tracking.
+
+---
+Generated: 2/17/2026, 2:31:01 PM

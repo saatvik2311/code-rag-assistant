@@ -1,0 +1,16 @@
+{
+  "name": "coderag",
+  "version": "2.0.0",
+  "description": "Multi-language AI coding assistant with RAG, repo analysis, code editing & context memory",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "cli": "node cli.js",
+    "index": "node cli.js --index",
+    "scan": "node cli.js --scan"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
